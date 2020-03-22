@@ -22,21 +22,21 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
-    "retry_delay": timedelta(minutes=5),
+    "retry_delay": timedelta(minutes=1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
     # 'end_date': datetime(2016, 1, 1),
 }
 
-def check_table_exists():
+def test():
     etl_test = Etl()
-    print(etl_test.pg_check_table_exists("postgres_test","public","dataset_test"))
+    print(etl_test.pg_load_from_csv_file(csv_source_file="", pg_str_conn="dbname='test' user='test' host='postgres' password='postgres'", pg_schema="public", pg_dest_table="hardbounce_raw") )
 
 dag = DAG("test", default_args=default_args, schedule_interval=timedelta(1))
 
 start = DummyOperator(task_id="start", dag=dag)
 
-test = PythonOperator(task_id="test", python_callable=check_table_exists, dag=dag)
+test = PythonOperator(task_id="test", python_callable=test, dag=dag)
 
 start >> test

@@ -1,9 +1,16 @@
-from airflow.hooks.postgres_hook import PostgresHook
+import psycopg2
 import csv
 
 class Etl:
 
-    def pg_check_table_exists(self, pg_connection_id, schema, table):
+    def __pg_connection(self, pg_str_conn):
+        
+        # Create a connection object
+        pg_conn = psycopg2.connect(pg_str_conn)
+
+        return pg_conn
+
+    def __pg_check_table_exists(self, pg_conn, schema, table):
         
         # Define query to check if a table exists
         query = """
@@ -12,11 +19,12 @@ class Etl:
             AND table_name = '{}';
         """.format(schema, table)
 
-        # Create a connection object
-        pg_hook_conn = PostgresHook(postgres_conn_id=pg_connection_id)
+        # create cursor
+        pg_cursor = pg_conn.cursor()
 
         # Execute query
-        query_results = pg_hook_conn.get_records(sql=query)
+        pg_cursor.execute(query)
+        query_results = pg_cursor.fetchall()
 
         # Check results
         if query_results[0][0] == 1:
@@ -24,15 +32,61 @@ class Etl:
         else:
             return False
 
-    def pg_load_from_csv_file(self, csv_source_file, pg_connection_id, pg_schema, pg_dest_table, csv_header = True):
+    def __pg_create_table(self, pg_conn, create_syntax):
+
+        # create cursor
+        pg_cursor = pg_conn.cursor()
+
+        # Create table
+        try:
+            pg_cursor.execute(create_syntax)
+            pg_conn.commit()
+            print("Table successfully created!")
+        except Exception as e:
+            print("Error creating table: ", e)
+
+    def pg_load_from_csv_file(self, csv_source_file, pg_str_conn, pg_schema, pg_dest_table, csv_header = True):
         
+        # Create table syntax
+        query_create_table = """
+        create table public.hardbounce_raw
+        (
+            emailDomain_cat varchar(255)
+            ,emailDomainPiece1 varchar(255)
+            ,emailDomainPiece2 varchar(255)
+            ,regDate_n date
+            ,birthDate_n date
+            ,monthsSinceRegDate int
+            ,age int
+            ,percNumbersInEmailUser numeric(10,2)
+            ,hasNumberInEmailUser int
+            ,emailUserCharQty int
+            ,flgHardBounce_n int
+        );
+        """
+
+        # Create a pg connection object
+        pg_conn = self.__pg_connection(pg_str_conn)
+
+        # Check if table exists
+        print("Result check table exists: ", self.__pg_check_table_exists(pg_conn, pg_schema, pg_dest_table))
+
+        # Create table if not exists
+        if not self.__pg_check_table_exists(pg_conn, pg_schema, pg_dest_table):
+            self.__pg_create_table(pg_conn, query_create_table)
+
+        # Create pg cursor
+        #pg_cursor = pg_conn.cursor()
+
         # Read CSV File
-        with open(csv_source_file, 'r') as f:
-            reader = csv.reader(f)
-            if csv_header:
-                next(reader) # skip header row
+        #with open(csv_source_file, 'r') as f:
+        #    reader = csv.reader(f)
+        #    if csv_header:
+        #        next(reader) # skip header row
             # Loop each line in CSV
-            # for row in reader:
+        #    for row in reader:
+
+
 
 
 
