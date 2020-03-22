@@ -31,7 +31,7 @@ default_args = {
 
 def test():
     etl_test = Etl()
-    print(etl_test.pg_load_from_csv_file(csv_source_file="", pg_str_conn="dbname='test' user='test' host='postgres' password='postgres'", pg_schema="public", pg_dest_table="hardbounce_raw") )
+    print(etl_test.pg_load_from_csv_file(csv_source_file="/usr/local/datasets/hardbounce.csv", pg_str_conn="dbname='test' user='test' host='postgres' password='postgres'", pg_schema="public", pg_dest_table="hardbounce_raw") )
 
 dag = DAG("test", default_args=default_args, schedule_interval=timedelta(1))
 

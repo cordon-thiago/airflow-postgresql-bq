@@ -24,7 +24,12 @@ sftp-config.json
 
 # Python
 __pycache__
+/modules/__pycache__/*.*
+/modules/etl/__pycache__/*.*
 
+# Specific files
 misc.txt
 *-old.*
-*.pyc
+
+# Dataset files
+/datasets/*.*

@@ -20,8 +20,9 @@ services:
             - LOAD_EX=n
             - EXECUTOR=Local
         volumes:
-            - ./dags:/usr/local/airflow/dags
-            - ./modules:/usr/local/airflow/modules
+            - ./dags:/usr/local/airflow/dags # DAG folder
+            - ./modules:/usr/local/airflow/modules # Modules for ETL
+            - ./datasets:/usr/local/datasets # Datasets
         ports:
             - "8080:8080"
         command: webserver
