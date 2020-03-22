@@ -44,7 +44,7 @@ class Etl:
         except Exception as e:
             print("Error creating table: ", e)
 
-    def pg_load_from_csv_file(self, csv_source_file, pg_str_conn, pg_schema, pg_dest_table, csv_header = True):
+    def pg_load_from_csv_file(self, csv_source_file, file_delimiter, pg_str_conn, pg_schema, pg_dest_table, csv_header = True):
         
         # Create table syntax
         query_create_table = """
@@ -84,7 +84,7 @@ class Etl:
                 next(f) # skip header row
             try:
                 # Copy data to table
-                pg_cursor.copy_from(f, pg_dest_table, sep=';')
+                pg_cursor.copy_from(f, pg_dest_table, sep=file_delimiter)
                 pg_conn.commit()
                 print("Rows successfully inserted!")
             except Exception as e:

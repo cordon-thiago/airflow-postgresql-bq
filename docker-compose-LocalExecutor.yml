@@ -23,6 +23,7 @@ services:
             - ./dags:/usr/local/airflow/dags # DAG folder
             - ./modules:/usr/local/airflow/modules # Modules for ETL
             - ./datasets:/usr/local/datasets # Datasets
+            - ./sql:/usr/local/airflow/sql # Sql Scripts
         ports:
             - "8080:8080"
         command: webserver
