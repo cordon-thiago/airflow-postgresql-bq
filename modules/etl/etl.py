@@ -31,65 +31,47 @@ class Etl:
         else:
             return False
 
-    def __pg_create_table(self, pg_conn, create_syntax):
+    # def __pg_create_table(self, pg_conn, create_syntax):
 
-        # create cursor
-        pg_cursor = pg_conn.cursor()
+    #     # create cursor
+    #     pg_cursor = pg_conn.cursor()
 
-        # Create table
-        try:
-            pg_cursor.execute(create_syntax)
-            pg_conn.commit()
-            print("Table successfully created!")
-        except Exception as e:
-            print("Error creating table: ", e)
+    #     # Create table
+    #     try:
+    #         pg_cursor.execute(create_syntax)
+    #         pg_conn.commit()
+    #         print("Table successfully created!")
+    #     except Exception as e:
+    #         print("Error creating table: ", e)
 
     def pg_load_from_csv_file(self, csv_source_file, file_delimiter, pg_str_conn, pg_schema, pg_dest_table, csv_header = True):
-        
-        # Create table syntax
-        query_create_table = """
-        create table {}.{}
-        (
-            emailDomain_cat varchar(255)
-            ,emailDomainPiece1 varchar(255)
-            ,emailDomainPiece2 varchar(255)
-            ,regDate_n varchar(255)
-            ,birthDate_n varchar(255)
-            ,monthsSinceRegDate varchar(255)
-            ,age varchar(255)
-            ,percNumbersInEmailUser varchar(255)
-            ,hasNumberInEmailUser varchar(255)
-            ,emailUserCharQty varchar(255)
-            ,flgHardBounce_n varchar(255)
-        );
-        """.format(pg_schema, pg_dest_table)
 
         # Create a pg connection object
         pg_conn = self.__pg_connection(pg_str_conn)
 
         # Check if table exists
-        print("Result check table exists: ", self.__pg_check_table_exists(pg_conn, pg_schema, pg_dest_table))
+        table_exists = self.__pg_check_table_exists(pg_conn, pg_schema, pg_dest_table)
+        print("Result check table exists: ", table_exists)
 
-        # Create table if not exists
-        if not self.__pg_check_table_exists(pg_conn, pg_schema, pg_dest_table):
-            self.__pg_create_table(pg_conn, query_create_table)
+        if table_exists:
+            # Create pg cursor
+            pg_cursor = pg_conn.cursor()
 
-        # Create pg cursor
-        pg_cursor = pg_conn.cursor()
+            # Read CSV File
+            with open(csv_source_file, 'r') as f:
 
-        # Read CSV File
-        with open(csv_source_file, 'r') as f:
+                if csv_header:
+                    next(f) # skip header row
+                try:
+                    # Copy data to table
+                    pg_cursor.copy_from(f, pg_dest_table, sep=file_delimiter)
+                    pg_conn.commit()
+                    print("Rows successfully inserted!")
+                except Exception as e:
+                    print("Error inserting data: ", e)
+        else:
+            raise Exception("Table {}.{} does not exists. Please, check the pipeline process.".format(pg_schema, pg_dest_table))
 
-            if csv_header:
-                next(f) # skip header row
-            try:
-                # Copy data to table
-                pg_cursor.copy_from(f, pg_dest_table, sep=file_delimiter)
-                pg_conn.commit()
-                print("Rows successfully inserted!")
-            except Exception as e:
-                print("Error inserting data: ", e)
-        
         # Close connection
         pg_conn.close()
 

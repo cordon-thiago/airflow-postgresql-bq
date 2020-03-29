@@ -29,6 +29,9 @@ wait_for_port() {
 
 wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
 
+# Create connection
+#export AIRFLOW_CONN_MY_PROD_DATABASE='postgres://test:postgres@postgres:5432/test'
+
 # Initialize airflow db (LocalExecutor)
 airflow initdb
 
@@ -37,3 +40,6 @@ airflow scheduler
 
 # Initialize webserver
 airflow webserver
+
+# Create connection
+# airflow connections add --conn_id 'postgres_test' --conn_uri 'postgres://test:postgres@postgres:5432/test'
