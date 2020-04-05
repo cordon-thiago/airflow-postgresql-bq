@@ -11,6 +11,7 @@ select
 	,cast(hasnumberinemailuser as int) as hasnumberinemailuser
 	,cast(emailusercharqty as int) as emailusercharqty
 	,cast(flghardbounce_n as int) as flghardbounce_n
+	,cast(now() as date) as timestamp
 into
 	{{ params.stg_table }}
 from 

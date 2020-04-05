@@ -1,12 +1,10 @@
-"""
-Code that goes along with the Airflow located at:
-http://airflow.readthedocs.org/en/latest/tutorial.html
-"""
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.contrib.operators.postgres_to_gcs_operator import PostgresToGoogleCloudStorageOperator
 from datetime import datetime, timedelta
+
 # Add path where are the additional modules for ETL 
 import sys
 sys.path.append('./modules/etl/')
@@ -85,4 +83,15 @@ create_stg_table = PostgresOperator(
     params={"stg_table":stg_table, "raw_table":raw_table},
     dag=dag)
 
-start >> create_raw_table >> import_file >> create_stg_table
+export_gcs = PostgresToGoogleCloudStorageOperator(
+    task_id="export_gcs",
+    sql="export_pg_table.sql",
+    params={"table":stg_table},
+    bucket="bq-dataengineer-stg",
+    filename=stg_table,
+    postgres_conn_id="postgres_default",
+    google_cloud_storage_conn_id="google_cloud_default",
+    dag=dag)
+
+
+start >> create_raw_table >> import_file >> create_stg_table >> export_gcs

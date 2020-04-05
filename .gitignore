@@ -33,3 +33,6 @@ misc.txt
 
 # Dataset files
 /datasets/*.*
+
+# Key files
+/keys/*.*

@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.2
+ARG AIRFLOW_VERSION=1.10.7
 ARG AIRFLOW_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -58,6 +58,9 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
+    #&& pip install 'grpc-google-iam-v1<0.12dev,>=0.11.4' \
+    #&& pip install 'google-cloud-container==0.2.1' \
+    #&& pip install 'google-cloud-storage==1.25.0' \
     && pip install -r requirements.txt \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis>=2.10.5,<3' \
@@ -71,10 +74,12 @@ RUN set -ex \
         /var/tmp/* \
         /usr/share/man \
         /usr/share/doc \
-        /usr/share/doc-base
+        /usr/share/doc-base \
+    && python --version \
+    && pip freeze
 
 COPY script/entrypoint.sh /entrypoint.sh
-COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
@@ -83,4 +88,4 @@ EXPOSE 8080 5555 8793
 USER airflow
 WORKDIR ${AIRFLOW_HOME}
 ENTRYPOINT ["/entrypoint.sh"]
-# CMD ["webserver"] # set default arg for entrypoint
+CMD ["webserver"] # set default arg for entrypoint

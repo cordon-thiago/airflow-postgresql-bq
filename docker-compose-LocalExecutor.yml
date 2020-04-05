@@ -12,18 +12,20 @@ services:
             - "5432:5432"
 
     webserver:
-        image: puckel/docker-airflow:1.10.9
+        image: puckel/docker-airflow:latest
         restart: always
         depends_on:
             - postgres
         environment:
             - LOAD_EX=n
             - EXECUTOR=Local
+            - CONN_POSTGRES_TEST=postgres://test:postgres@postgres:5432/test
         volumes:
             - ./dags:/usr/local/airflow/dags # DAG folder
             - ./modules:/usr/local/airflow/modules # Modules for ETL
             - ./datasets:/usr/local/datasets # Datasets
             - ./sql:/usr/local/airflow/sql # Sql Scripts
+            - ./keys:/usr/local/airflow/keys # Keys for GCP connection
         ports:
             - "8080:8080"
         command: webserver
