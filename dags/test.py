@@ -3,6 +3,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.postgres_to_gcs_operator import PostgresToGoogleCloudStorageOperator
+from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 from datetime import datetime, timedelta
 
 # Add path where are the additional modules for ETL 
@@ -20,6 +21,8 @@ stg_table = "public.hardbounce_stg"
 csv_source_file = "/usr/local/datasets/hardbounce.csv"
 file_delimiter = ";"
 pg_str_conn = "dbname='test' user='test' host='postgres' password='postgres'"
+bq_bucket = "bq-dataengineer-stg"
+
 
 ###############################################
 # Functions
@@ -87,11 +90,25 @@ export_gcs = PostgresToGoogleCloudStorageOperator(
     task_id="export_gcs",
     sql="export_pg_table.sql",
     params={"table":stg_table},
-    bucket="bq-dataengineer-stg",
+    bucket=bq_bucket,
     filename=stg_table,
+    schema_filename=stg_table + "_schema",
     postgres_conn_id="postgres_default",
     google_cloud_storage_conn_id="google_cloud_default",
     dag=dag)
 
+gcs_to_bq = GoogleCloudStorageToBigQueryOperator(
+    task_id="gcs_to_bq",
+    bucket=bq_bucket,
+    source_objects=[stg_table],
+    source_format="NEWLINE_DELIMITED_JSON",
+    destination_project_dataset_table="bq-dataengineer:stg.{}".format(stg_table.split(".")[1]),
+    autodetect=False,
+    schema_object=stg_table + "_schema",
+    create_disposition="CREATE_IF_NEEDED",
+    write_disposition="WRITE_TRUNCATE",
+    bigquery_conn_id="bigquery_default",
+    google_cloud_storage_conn_id="google_cloud_default",
+    dag=dag)
 
-start >> create_raw_table >> import_file >> create_stg_table >> export_gcs
+start >> create_raw_table >> import_file >> create_stg_table >> export_gcs >> gcs_to_bq
